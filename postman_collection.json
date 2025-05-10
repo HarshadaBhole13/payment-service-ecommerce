@@ -1,0 +1,165 @@
+{
+    "info": {
+        "name": "Payment Service",
+        "description": "Collection for the Payment Service API endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Process Payment",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"orderId\": \"order_id\",\n    \"paymentMethod\": \"Credit Card\",\n    \"amount\": 99.99,\n    \"cardDetails\": {\n        \"cardNumber\": \"4111111111111111\",\n        \"expDate\": \"12/25\",\n        \"cvv\": \"123\"\n    }\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/payments/process",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "payments", "process"]
+                }
+            }
+        },
+        {
+            "name": "Get Payment by ID",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/payments/:id",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "payments", ":id"],
+                    "variable": [
+                        {
+                            "key": "id",
+                            "value": "payment_id"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Refund Payment",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/payments/:id/refund",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "payments", ":id", "refund"],
+                    "variable": [
+                        {
+                            "key": "id",
+                            "value": "payment_id"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Payment History",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/payments/history?page=1",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "payments", "history"],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Payment Stats (Admin)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/payments/admin/stats",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "payments", "admin", "stats"]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8084"
+        },
+        {
+            "key": "token",
+            "value": "your_jwt_token"
+        },
+        {
+            "key": "service_token",
+            "value": "your_service_token"
+        }
+    ]
+}
