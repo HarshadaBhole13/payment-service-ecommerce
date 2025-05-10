@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 const Payment = require("../models/Payment");
 const orderService = require("../services/orderService");
 const paymentProcessor = require("../services/paymentProcessor");
-const { publishEvent } = require("../utils/messageQueue");
 const { generateServiceToken } = require("../middleware/authMiddleware");
+const { publishMessage } = require("../messaging/setup");
 const logger = require("../config/logger");
 
 /**
@@ -186,7 +186,7 @@ const processPayment = asyncHandler(async (req, res) => {
             );
         }
 
-        await publishEvent("payment.successful", {
+        await publishMessage("payment.successful", {
             paymentId: payment._id,
             orderId: payment.order,
             userId: payment.user,
@@ -204,7 +204,7 @@ const processPayment = asyncHandler(async (req, res) => {
         });
     } catch (error) {
         logger.error(`Payment processing error: ${error.message}`);
-        await publishEvent("payment.failed", {
+        await publishMessage("payment.failed", {
             orderId: orderId,
             userId: userId,
             amount: amount,
@@ -277,7 +277,7 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
         payment.refundId = refundResult.refundId;
 
         // Publish payment refunded event
-        publishEvent("payment.refunded", {
+        publishMessage("payment.refunded", {
             paymentId: payment._id.toString(),
             orderId: payment.order,
             userId: payment.user,
@@ -329,7 +329,7 @@ const refundPayment = asyncHandler(async (req, res) => {
     await payment.save();
 
     // Publish refund processed event
-    await publishEvent("payment.refunded", {
+    await publishMessage("payment.refunded", {
         paymentId: payment._id,
         orderId: payment.order,
         amount: payment.amount,
