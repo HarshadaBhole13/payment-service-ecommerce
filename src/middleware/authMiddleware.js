@@ -5,8 +5,7 @@ const { UnauthorizedError } = require("../errors");
 const logger = require("../config/logger");
 
 // User service URL
-const USER_SERVICE_URL =
-    process.env.USER_SERVICE_URL || "http://localhost:8081";
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL;
 
 /**
  * Middleware to protect routes - validates JWT token and attaches user to request
@@ -141,10 +140,7 @@ const validateServiceToken = (req, res, next) => {
 
 // Check if request is from API Gateway
 const isFromApiGateway = (req) => {
-    return (
-        req.headers["x-service-token"] &&
-        req.headers["x-service-token"].startsWith("Bearer ")
-    );
+    return req.headers["x-service-token"];
 };
 
 // Middleware to block all external requests
@@ -162,8 +158,7 @@ const blockExternalRequests = (req, res, next) => {
 
 // Generate service token for internal service calls
 const generateServiceToken = () => {
-    const serviceSecret =
-        process.env.SERVICE_SECRET || "api_gateway_secret_key";
+    const serviceSecret = process.env.SERVICE_SECRET;
 
     logger.info(
         "Generating service token with secret",
@@ -174,7 +169,7 @@ const generateServiceToken = () => {
 
     return jwt.sign(
         {
-            service: "api-gateway",
+            service: "payment-service",
             type: "service",
         },
         serviceSecret,
