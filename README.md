@@ -55,44 +55,6 @@ The Payment Service provides:
     npm start
     ```
 
-## Deployment
-
-### Docker Deployment
-
-1. **Build the Image**
-
-    ```bash
-    docker build -t payment-service:1.0 .
-    ```
-
-2. **Run the Container**
-    ```bash
-    docker run -p 8084:8084 \
-      -e MONGODB_URI=mongodb://mongodb:27017/paymentdb \
-      -e JWT_SECRET=your_jwt_secret \
-      -e RABBITMQ_URL=amqp://rabbitmq:5672 \
-      payment-service:1.0
-    ```
-
-### Kubernetes Deployment
-
-1. **Create Namespace**
-
-    ```bash
-    kubectl create namespace ecommerce
-    ```
-
-2. **Apply Kubernetes Manifests**
-
-    ```bash
-    kubectl apply -f kubernetes/
-    ```
-
-3. **Verify Deployment**
-    ```bash
-    kubectl get all -n ecommerce -l app=payment-service
-    ```
-
 ## API Documentation
 
 ### Protected User Routes
@@ -167,23 +129,3 @@ The service publishes the following events:
     - Verify JWT secret configuration
     - Check service token validation
     - Verify user token extraction
-
-### Debug Commands
-
-```bash
-# Check pod status
-kubectl get pods -n ecommerce -l app=payment-service
-
-# Check service logs
-kubectl logs -f deployment/payment-service -n ecommerce
-
-# Check MongoDB connection
-kubectl exec -it deployment/payment-service -n ecommerce -- mongosh
-
-# Check RabbitMQ connection
-kubectl exec -it deployment/payment-service -n ecommerce -- rabbitmqctl status
-```
-
-## License
-
-MIT License
