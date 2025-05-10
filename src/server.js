@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const connectDB = require("./config/database");
-const { setupRabbitMQ } = require("./utils/messageQueue");
+const { setupRabbitMQ } = require("./messaging/setup");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const paymentRoutes = require("./routes/paymentRoutes");
 const logger = require("./config/logger");
@@ -16,17 +16,7 @@ if (!process.env.JWT_SECRET) {
     process.env.JWT_SECRET = "default_jwt_secret_only_for_development";
 }
 
-// Connect to MongoDB
-connectDB();
-
-// Connect to RabbitMQ
-if (process.env.RABBITMQ_URL) {
-    setupRabbitMQ().catch((err) => {
-        logger.error(`Failed to setup RabbitMQ: ${err.message}`);
-    });
-}
-
-// Initialize Express app
+// Initialize Express
 const app = express();
 
 // Middleware
@@ -46,21 +36,78 @@ app.get("/health", (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 8084;
-app.listen(PORT, () => {
-    logger.info(`Payment Service running on port ${PORT}`);
+// Initialize RabbitMQ connection
+const initializeRabbitMQ = async () => {
+    let retries = 5;
+    while (retries > 0) {
+        try {
+            await setupRabbitMQ();
+            logger.info("RabbitMQ initialization completed");
+            return true;
+        } catch (error) {
+            retries--;
+            logger.error(
+                `Failed to initialize RabbitMQ (${retries} retries left):`,
+                error
+            );
+            if (retries === 0) {
+                throw error;
+            }
+            // Wait for 5 seconds before retrying
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+    }
+};
+
+const validateEnvironmentVariables = () => {
+    const requiredVars = [
+        "PORT",
+        "MONGODB_URI",
+        "JWT_SECRET",
+        "SERVICE_SECRET",
+        "RABBITMQ_URL",
+        "USER_SERVICE_URL",
+        "ORDER_SERVICE_URL",
+        "NOTIFICATION_SERVICE_URL",
+    ];
+
+    requiredVars.forEach((varName) => {
+        if (!process.env[varName]) {
+            logger.error(`Environment variable ${varName} is not set.`);
+        }
+    });
+};
+
+// Start the server
+const startServer = async () => {
+    try {
+        // Connect to MongoDB
+        await connectDB();
+        logger.info("Connected to MongoDB");
+
+        validateEnvironmentVariables();
+
+        // Initialize RabbitMQ
+        await initializeRabbitMQ();
+
+        // Start HTTP server
+        const PORT = process.env.PORT;
+        app.listen(PORT, () => {
+            logger.info(`Payment Service running on port ${PORT}`);
+        });
+    } catch (error) {
+        logger.error("Failed to start server:", error);
+        process.exit(1);
+    }
+};
+
+// Handle graceful shutdown
+process.on("SIGTERM", async () => {
+    logger.info("SIGTERM received, shutting down gracefully");
+    process.exit(0);
 });
 
-// Handle uncaught exceptions and rejections
-process.on("uncaughtException", (err) => {
-    logger.error(`Uncaught Exception: ${err.message}`);
-    process.exit(1);
-});
-
-process.on("unhandledRejection", (err) => {
-    logger.error(`Unhandled Rejection: ${err.message}`);
-    process.exit(1);
-});
+// Start the server
+startServer();
 
 module.exports = app; // Export for testing
